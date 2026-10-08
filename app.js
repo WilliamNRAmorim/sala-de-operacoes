@@ -68,8 +68,8 @@ function spriteSVG(info, escala = 4) {
 }
 
 /* ---------- estado a partir dos eventos ---------- */
-function derivar(evs) {
-  const now = Date.now(), janela = (CFG.janelaHoras || 12) * 3600e3;
+function derivar(evs, horas) {
+  const now = Date.now(), janela = (horas || CFG.janelaHoras || 12) * 3600e3;
   const sess = {}, ag = {}, pend = [];   // pend: descrições de agentes recém-criados, à espera do SubagentStart
   const nomeProj = p => ((CFG.projetos || {})[p]) || p || '';
   const pegaNome = (tipo, t) => { const i = pend.findIndex(p => p.tipo === tipo && p.t <= t + 2000); return i >= 0 ? pend.splice(i, 1)[0].desc : ''; };
