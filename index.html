@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sala de Operações</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <h1 id="titulo">Sala de Operações</h1>
+    <div class="sub" id="subtitulo"></div>
+  </div>
+  <div class="hud" id="hud"></div>
+  <div class="ctrl">
+    <select id="janela" title="Janela de tempo"></select>
+    <button id="btnRev" title="Ranking semanal dos agentes">🏆 revisão semanal</button>
+    <button id="btnDemo" title="Alternar modo demo">▶ demo</button>
+    <button id="btnCfg" title="Personalizar">⚙</button>
+  </div>
+</header>
+
+<main>
+  <canvas id="cena"></canvas>
+  <section class="log" id="log"></section>
+</main>
+
+<aside class="ficha" id="ficha" hidden>
+  <div class="fhead">
+    <div id="fAvatar" class="fav"></div>
+    <div class="fid"><b id="fNome"></b><div id="fSub" class="sub"></div><div class="xpbar"><i id="fXp"></i></div><div id="fNivel" class="sub"></div></div>
+    <button id="fFechar" title="Fechar">✕</button>
+  </div>
+  <nav class="tabs">
+    <button data-t="atividade" class="on">Atividade</button>
+    <button data-t="entregas">Entregas</button>
+    <button data-t="memoria">Memória</button>
+  </nav>
+  <div class="fbody" id="fBody"></div>
+</aside>
+
+<div class="modal" id="revisao" hidden>
+  <div class="mcard">
+    <div class="dhead"><b>🏆 Revisão semanal</b><button id="rFechar">✕</button></div>
+    <div id="rBody"></div>
+  </div>
+</div>
+
+<aside class="drawer" id="drawer" hidden>
+  <div class="dhead"><b>Personalizar</b><button id="fechar">✕</button></div>
+  <p class="hint">Edite o JSON e clique em <b>Aplicar</b>. Fica salvo neste navegador. Para tornar permanente, use <b>Exportar</b> e substitua o <code>config.json</code>.</p>
+  <label>Tema <select id="selTema"></select></label>
+  <textarea id="cfg" spellcheck="false"></textarea>
+  <div class="dbtn">
+    <button id="aplicar">Aplicar</button>
+    <button id="exportar">Exportar</button>
+    <button id="restaurar">Restaurar padrão</button>
+  </div>
+  <div class="err" id="cfgErr"></div>
+</aside>
+
+<script src="cena.js"></script>
+<script src="app.js"></script>
+<script src="ficha.js"></script>
+</body>
+</html>

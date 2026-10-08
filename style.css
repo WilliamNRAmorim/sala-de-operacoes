@@ -1,0 +1,81 @@
+:root{--fundo:#12102a;--painel:#1d1a3f;--linha:#3a3480;--texto:#e9e6ff;--suave:#8f89c9;--piso:#241f52;--destaque:#ffd23f;--ok:#3ddc84;--alerta:#ff5d73}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fundo);color:var(--texto);font-family:"Courier New",monospace;padding:16px}
+button,select{font:inherit;color:var(--texto);background:var(--painel);border:2px solid var(--linha);padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--destaque)}
+.top{max-width:1200px;margin:0 auto 14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:20px;letter-spacing:2px;text-transform:uppercase}
+.sub{color:var(--suave);font-size:12px;margin-top:2px}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:var(--painel);border:2px solid var(--linha);padding:5px 10px;font-size:12px}
+.pill b{color:var(--destaque)}
+.ctrl{display:flex;gap:6px}
+main{max-width:1200px;margin:0 auto}
+.room{background:var(--piso);border:3px solid var(--linha);padding:12px;display:grid;gap:12px;background-image:linear-gradient(var(--linha) 1px,transparent 1px),linear-gradient(90deg,var(--linha) 1px,transparent 1px);background-size:32px 32px;background-blend-mode:soft-light}
+.area{background:color-mix(in srgb,var(--painel) 82%,transparent);border:2px dashed var(--linha);padding:10px;min-height:96px}
+h2{margin:0 0 8px;font-size:12px;color:var(--suave);text-transform:uppercase;letter-spacing:1px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.mesa{background:var(--painel);border:2px solid var(--linha);padding:8px;text-align:center;min-height:150px;position:relative}
+.mesa.livre{opacity:.45}
+.mesa .tela{height:14px;margin:0 auto 6px;width:56px;border:2px solid var(--linha);background:#0b0920}
+.mesa.ocupada .tela{background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pisca 1.2s infinite steps(2)}
+.mesa.sumido .tela{background:var(--alerta)}
+@keyframes pisca{50%{opacity:.55}}
+.pessoa{display:inline-block;text-align:center;position:relative}
+.pessoa svg{image-rendering:pixelated;display:block;margin:0 auto}
+.trab svg{animation:digita .5s infinite steps(2)}
+@keyframes digita{to{transform:translateY(-2px)}}
+.balao{position:absolute;top:-14px;right:-8px;font-size:14px;animation:flutua 1.4s infinite ease-in-out}
+@keyframes flutua{50%{transform:translateY(-3px)}}
+.nome{font-size:11px;margin-top:4px;font-weight:bold}
+.meta{font-size:10px;color:var(--suave)}
+.estado{font-size:10px;margin-top:2px}
+.estado.t{color:var(--destaque)}.estado.c{color:var(--ok)}.estado.s{color:var(--alerta)}
+.sofa .pessoa{opacity:.8}
+.sofa .pessoa svg{filter:saturate(.7)}
+.vazio{font-size:11px;color:var(--suave);padding:6px}
+.log{margin-top:12px;background:var(--painel);border:2px solid var(--linha);padding:8px 10px;font-size:11px;max-height:130px;overflow:auto}
+.log div{padding:1px 0;color:var(--suave)}.log b{color:var(--texto)}
+.drawer{position:fixed;top:0;right:0;width:min(440px,100%);height:100%;background:var(--painel);border-left:3px solid var(--linha);padding:14px;display:flex;flex-direction:column;gap:8px;z-index:10}
+.drawer[hidden]{display:none}
+.dhead{display:flex;justify-content:space-between;align-items:center}
+.hint{font-size:11px;color:var(--suave);margin:0}
+.drawer textarea{flex:1;background:#0b0920;color:var(--texto);border:2px solid var(--linha);font:12px "Courier New",monospace;padding:8px;resize:none}
+.dbtn{display:flex;gap:6px;flex-wrap:wrap}
+.err{color:var(--alerta);font-size:11px;min-height:14px}
+code{background:#0b0920;padding:0 4px}
+@media(max-width:560px){body{padding:10px}}
+#cena{display:block;width:100%;height:auto;image-rendering:pixelated;background:#0b0f1a;border:3px solid var(--linha)}
+/* ficha do agente e revisão semanal */
+#cena{cursor:default}
+.ficha{position:fixed;top:0;right:0;width:min(460px,100%);height:100%;background:var(--painel);border-left:3px solid var(--linha);display:flex;flex-direction:column;z-index:9}
+.ficha[hidden],.modal[hidden]{display:none}
+.fhead{display:flex;gap:12px;align-items:center;padding:12px;border-bottom:2px solid var(--linha)}
+.fav svg{display:block;image-rendering:pixelated}
+.fid{flex:1;min-width:0}
+.fid b{font-size:16px}
+.xpbar{height:8px;background:#0b0920;border:2px solid var(--linha);margin:6px 0 2px}
+.xpbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--destaque),var(--ok));transition:width .5s}
+.tabs{display:flex;border-bottom:2px solid var(--linha)}
+.tabs button{flex:1;border:0;border-right:2px solid var(--linha);background:transparent}
+.tabs button.on{background:var(--linha)}
+.fbody{flex:1;overflow:auto;padding:10px;font-size:12px}
+.lin{padding:4px 0;border-bottom:1px dashed var(--linha);word-break:break-word}
+.lin small{color:var(--suave)}
+.entrega{padding:8px;border:2px solid var(--linha);margin-bottom:8px;cursor:pointer}
+.entrega:hover{border-color:var(--destaque)}
+.badge{display:inline-block;padding:0 6px;border:1px solid var(--linha);font-size:11px;margin-left:6px}
+.badge.up{color:var(--ok)}.badge.down{color:var(--alerta)}
+pre.doc{white-space:pre-wrap;background:#0b0920;border:2px solid var(--linha);padding:8px;max-height:46vh;overflow:auto;font:12px "Courier New",monospace}
+.fbody textarea,.fbody input,.mcard textarea,.mcard input{width:100%;background:#0b0920;color:var(--texto);border:2px solid var(--linha);font:12px "Courier New",monospace;padding:6px;margin:6px 0}
+.acoes{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.vazio2{color:var(--suave);padding:10px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-start;justify-content:center;padding:24px 12px;z-index:20;overflow:auto}
+.mcard{background:var(--painel);border:3px solid var(--linha);width:min(920px,100%);padding:14px}
+table.rank{width:100%;border-collapse:collapse;font-size:12px;margin:6px 0 12px}
+table.rank th,table.rank td{border:1px solid var(--linha);padding:5px 8px;text-align:left}
+table.rank tr.top td{background:color-mix(in srgb,var(--ok) 18%,transparent)}
+table.rank tr.bot td{background:color-mix(in srgb,var(--alerta) 18%,transparent)}
+.prop{border:2px dashed var(--destaque);padding:10px;margin:8px 0}
+.nota{color:var(--suave);font-size:11px}

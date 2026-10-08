@@ -1,0 +1,166 @@
+{
+  "_ajuda": "Edite este arquivo (ou use a engrenagem na página). Tudo aqui é opcional: apague uma chave e vale o padrão.",
+
+  "titulo": "Sala de Operações",
+  "subtitulo": "Agentes do Claude Code ao vivo",
+  "tema": "noite",
+  "pollSegundos": 4,
+  "janelaHoras": 12,
+  "janelasDisponiveis": [6, 12, 24],
+  "minutosParaSumido": 30,
+  "maxMesas": 8,
+  "maxNoSofa": 12,
+  "mostrarLog": true,
+  "revisao": { "fracao": 0.25, "minAvaliacoes": 3, "dias": 7, "_ajuda": "fracao = % melhores/piores por grupo; minAvaliacoes = notas suas mínimas para entrar no ranking; dias = janela" },
+
+  "fonteLocal": { "tipo": "arquivo", "url": "data/events.json", "_ajuda": "usada quando a página abre em localhost: lê o arquivo local, com todos os detalhes" },
+  "fonteDados": { "tipo": "firebase", "url": "https://meu-escritorio-de-ti-default-rtdb.firebaseio.com/salas/mfu0px6n79jgqchrzsvi358otd2a/eventos.json", "_ajuda": "tipos: arquivo, sse ou firebase (tempo real)" },
+
+  "sala": {
+    "_ajuda": "Medidas em 'tiles' (1 tile = 16px). Mude posições, adicione/remova móveis, mesas e lugares à vontade.",
+    "largura": 30, "altura": 17,
+    "escalaPersonagem": 2,
+    "cores": {
+      "paredeTopo": "#141c2e", "parede": "#22304a", "rodape": "#16203a",
+      "madeira1": "#8a5a34", "madeira2": "#7d4f2c", "madeiraLinha": "#6a4224",
+      "lounge": "#3b6ea5", "xadrez1": "#2b2b2b", "xadrez2": "#cfcfcf",
+      "mesa": "#c8935a", "mesaBorda": "#8c5f35", "cadeira": "#5da56a",
+      "sofa": "#a3234f", "sofaEscuro": "#7d1a3b", "moldura": "#b87c4a",
+      "planta": "#2e7d4f", "plantaEscura": "#1f5c38", "vaso": "#8a5a34",
+      "monitor": "#cfd3d8", "tela": "#3ddc84", "telaOff": "#1b2230", "telaSumida": "#ff5d73"
+    },
+    "entrada": { "x": 1.4, "y": 9.2 },
+    "corredorY": 9.2,
+    "porta": { "y1": 8, "y2": 10.5, "xEscritorio": 16.6, "xLounge": 18.8 },
+    "faixas": { "x": 19.4, "cima": 6.6, "baixo": 14.4 },
+    "mesas": [
+      { "x": 2,  "y": 4.5 }, { "x": 7,  "y": 4.5 }, { "x": 12, "y": 4.5 },
+      { "x": 2,  "y": 10.8 }, { "x": 7,  "y": 10.8 }, { "x": 12, "y": 10.8 }
+    ],
+    "lugaresSessao": [
+      { "x": 3, "y": 15.4 }, { "x": 5.6, "y": 15.4 }, { "x": 8.2, "y": 15.4 },
+      { "x": 10.8, "y": 15.4 }, { "x": 13.4, "y": 15.4 }, { "x": 15.6, "y": 15.4 }
+    ],
+    "lugaresSofa": [
+      { "x": 23.3, "y": 8.9,  "sentado": true, "olha": "frente" },
+      { "x": 25.3, "y": 8.9,  "sentado": true, "olha": "frente" },
+      { "x": 23.3, "y": 13.5, "sentado": true, "olha": "costas" },
+      { "x": 25.3, "y": 13.5, "sentado": true, "olha": "costas" },
+      { "x": 20.75, "y": 10.2, "sentado": true, "olha": "frente" },
+      { "x": 20.75, "y": 11.8, "sentado": true, "olha": "frente" },
+      { "x": 27.75, "y": 10.2, "sentado": true, "olha": "frente" },
+      { "x": 27.75, "y": 11.8, "sentado": true, "olha": "frente" },
+      { "x": 21, "y": 15.4 }, { "x": 23, "y": 15.4 }, { "x": 25, "y": 15.4 }, { "x": 27, "y": 15.4 },
+      { "x": 22, "y": 5.7 }, { "x": 24.5, "y": 5.7 }, { "x": 27, "y": 5.7 }
+    ],
+    "moveis": [
+      { "t": "planta", "x": 1.3, "y": 2.2 },
+      { "t": "estante", "x": 3.6, "y": 1.1, "l": 3 },
+      { "t": "relogio", "x": 8.4, "y": 1.5 },
+      { "t": "estante", "x": 11, "y": 1.1, "l": 3 },
+      { "t": "planta", "x": 15.4, "y": 2.2 },
+      { "t": "planta", "x": 1.3, "y": 13.4 },
+      { "t": "lixeira", "x": 15.6, "y": 14.2 },
+      { "t": "quadro", "x": 20.4, "y": 1.3 },
+      { "t": "quadroG", "x": 23.4, "y": 1.2 },
+      { "t": "quadro", "x": 27.2, "y": 1.3 },
+      { "t": "planta", "x": 19.9, "y": 3.2 },
+      { "t": "planta", "x": 28.2, "y": 3.2 },
+      { "t": "sofaV", "x": 20, "y": 9.2, "w": 1.5, "h": 3.4 },
+      { "t": "sofaV", "x": 27, "y": 9.2, "w": 1.5, "h": 3.4 },
+      { "t": "sofaH", "x": 22, "y": 7.7, "w": 4.6, "h": 1.7 },
+      { "t": "sofaH", "x": 22, "y": 12.6, "w": 4.6, "h": 1.7 },
+      { "t": "mesaCafe", "x": 23.1, "y": 10, "w": 2.6, "h": 1.9 },
+      { "t": "balcao", "x": 26, "y": 14.9, "w": 3, "h": 1.1 }
+    ]
+  },
+
+  "textos": {
+    "trabalhando": "trabalhando",
+    "concluiu": "concluiu",
+    "sumiu": "sumiu?",
+    "mesaVazia": "mesa livre",
+    "sofa": "Sofá (encerrados)",
+    "chefe": "Sessões",
+    "semAgentes": "Nenhum agente ativo agora"
+  },
+
+  "tipos": {
+    "_padrao":  { "nome": "Agente",     "cor": "#8b9bff", "cabelo": "#3b2f2f", "balao": "…" },
+    "_ajudaSprite": "Cada tipo pode ter 'sprite' próprio: pixels + paleta (letras livres), rostoLetras/costasLetra/linhasRosto (o que some de costas) e letraPerna (anima o andar).",
+
+    "bit": {
+      "nome": "Bit", "cor": "#ff3b1f", "balao": "🎬",
+      "sprite": {
+        "pixels": ["....rr....", "....d.....", "..oooooo..", ".oooooooo.", ".owwoowwo.", ".owkoowko.", ".oooooooo.", ".ooddddoo.", ".oooooooo.", "..oooooo..", "..oo..oo..", "..oo..oo.."],
+        "paleta": { "o": "#ff3b1f", "d": "#b72410", "w": "#ffffff", "k": "#1a1410", "r": "#c8180a" },
+        "rostoLetras": ["w", "k"], "costasLetra": "o", "linhasRosto": 7, "letraPerna": "o"
+      }
+    },
+    "insta": {
+      "nome": "Insta", "cor": "#e1306c", "balao": "📸",
+      "sprite": {
+        "pixels": ["....rr....", "....d.....", "..oooooo..", ".oooooooo.", ".owwoowwo.", ".owkoowko.", ".oooooooo.", ".oodwwdoo.", ".oodwwdoo.", "..oooooo..", "..oo..oo..", "..oo..oo.."],
+        "paleta": { "o": "#e1306c", "d": "#833ab4", "w": "#ffffff", "k": "#1a1410", "r": "#fcaf45" },
+        "rostoLetras": ["w", "k"], "costasLetra": "o", "linhasRosto": 7, "letraPerna": "o"
+      }
+    },
+    "din": {
+      "nome": "Din", "cor": "#0a66c2", "balao": "💼",
+      "sprite": {
+        "pixels": ["....rr....", "....d.....", "..oooooo..", ".oooooooo.", ".owwoowwo.", ".owkoowko.", ".oooooooo.", ".oodttdoo.", ".ooootooo.", "..oooooo..", "..oo..oo..", "..oo..oo.."],
+        "paleta": { "o": "#0a66c2", "d": "#004182", "w": "#ffffff", "k": "#1a1410", "r": "#ffffff", "t": "#ffd23f" },
+        "rostoLetras": ["w", "k"], "costasLetra": "o", "linhasRosto": 7, "letraPerna": "o"
+      }
+    },
+    "tit": {
+      "nome": "Tit", "cor": "#25f4ee", "balao": "🎵",
+      "sprite": {
+        "pixels": ["....rr....", "....d.....", "..oooooo..", ".oooooooo.", ".owwoowwo.", ".owkoowko.", ".oooooooo.", ".ooddddoo.", ".oooooooo.", "..oooooo..", "..oo..oo..", "..oo..oo.."],
+        "paleta": { "o": "#2a2a33", "d": "#25f4ee", "w": "#ffffff", "k": "#1a1410", "r": "#fe2c55" },
+        "rostoLetras": ["w", "k"], "costasLetra": "o", "linhasRosto": 7, "letraPerna": "o"
+      }
+    },
+
+    "explorador": { "nome": "Explorador", "cor": "#3ddc84", "cabelo": "#2b2b2b", "balao": "🔍" },
+    "planejador": { "nome": "Planejador", "cor": "#ffd23f", "cabelo": "#6b4a2b", "balao": "📋" },
+    "executor":   { "nome": "Executor",   "cor": "#ff8a4c", "cabelo": "#1f1f1f", "balao": "🔧" },
+    "revisor":    { "nome": "Revisor",    "cor": "#c77dff", "cabelo": "#8a8a8a", "balao": "🧐" },
+    "general-purpose": { "nome": "Geral", "cor": "#4cc9f0", "cabelo": "#4a2c1a", "balao": "💭" }
+  },
+
+  "projetos": {
+    "_ajuda": "Pasta -> nome que aparece na sala. Só o nome da última pasta é usado.",
+    "Projetos": "Escritório de TI"
+  },
+
+  "paleta": {
+    "pele": "#f1c9a5",
+    "olho": "#1b1b1b",
+    "calca": "#3a3f5c"
+  },
+
+  "sprite": {
+    "_ajuda": "Cada letra é um pixel. h=cabelo s=pele e=olho c=cor do tipo p=calça '.'=vazio. Pode desenhar o seu.",
+    "pixels": [
+      "...hhhh...",
+      "..hhhhhh..",
+      "..ssssss..",
+      "..sesses..",
+      "..ssssss..",
+      "...cccc...",
+      "..cccccc..",
+      ".sccccccs.",
+      ".sccccccs.",
+      "..cccccc..",
+      "..pp..pp..",
+      "..pp..pp.."
+    ]
+  },
+
+  "temas": {
+    "noite":  { "fundo": "#12102a", "painel": "#1d1a3f", "linha": "#3a3480", "texto": "#e9e6ff", "suave": "#8f89c9", "piso": "#241f52", "destaque": "#ffd23f", "ok": "#3ddc84", "alerta": "#ff5d73" },
+    "claro":  { "fundo": "#f4f1ea", "painel": "#ffffff", "linha": "#d6cfc0", "texto": "#2a2a2a", "suave": "#7a7466", "piso": "#ece6d8", "destaque": "#e0a100", "ok": "#1f9d57", "alerta": "#d6334a" },
+    "retro":  { "fundo": "#0d1b0d", "painel": "#13291a", "linha": "#1f5c2e", "texto": "#b8ffb8", "suave": "#5fa86a", "piso": "#10241a", "destaque": "#f5ff5c", "ok": "#5cff8a", "alerta": "#ff6b6b" }
+  }
+}
