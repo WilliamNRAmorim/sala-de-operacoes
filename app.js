@@ -86,12 +86,12 @@ function derivar(evs) {
       case 'SessionEnd': s.estado = 'fim'; s.fim = t; break;
       case 'PreToolUse': if (e.tool === 'Agent' || e.tool === 'Task') pend.push({ t, tipo: e.type, desc: e.alvo || '' }); break;
       case 'SubagentStart': ag[e.agent || sid + t] = { id: e.agent, tipo: e.type, nome: pegaNome(e.type, t), sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: null }; break;
-      case 'PostToolUse': { const a = ag[e.agent]; if (a && (e.tool === 'Write' || e.tool === 'Edit') && e.arquivo) (a.arquivos = a.arquivos || []).push(e.arquivo); } break;
-      case 'SubagentStop': { const a = ag[e.agent]; if (a) { a.fim = t; a.resumo = e.resumo || ''; } else ag[e.agent] = { id: e.agent, tipo: e.type, sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: t }; } break;
+      case 'PostToolUse': { const a = ag[e.agent]; if (a && (e.tool === 'Write' || e.tool === 'Edit') && e.arquivo) (a.arquivos = a.arquivos || []).push(e.arquivo); if (a && e.tool === 'Agent' && e.resumo) a.resumo = e.resumo; } break;
+      case 'SubagentStop': { const a = ag[e.agent]; if (a) { a.fim = t; a.resumo = e.resumo || a.resumo || ''; } else ag[e.agent] = { id: e.agent, tipo: e.type, sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: t }; } break;
     }
   }
   const stale = (CFG.minutosParaSumido || 30) * 60e3;
-  const agentes = Object.values(ag).map(a => ({ ...a, estado: a.fim ? 'done' : (now - a.inicio > stale ? 'sumido' : 'work') }));
+  const agentes = Object.values(ag).filter(a => a.tipo).map(a => ({ ...a, estado: a.fim ? 'done' : (now - a.inicio > stale ? 'sumido' : 'work') }));   // sem tipo = agente interno do Claude Code, não é trabalho seu
   const sessoes = Object.values(sess).filter(s => s.estado !== 'fim' && now - s.ult < janela);
   return { agentes, sessoes };
 }

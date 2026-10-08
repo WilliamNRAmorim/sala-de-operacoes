@@ -175,7 +175,7 @@ async function abrirRevisao() {
 /* ---------- avaliação logo que o agente termina ---------- */
 const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
 const CHIPS = [['atendeu', 'Atendeu o que pedi'], ['sem_problemas', 'Sem problemas'], ['retrabalho', 'Teve retrabalho'], ['errou', 'Errou'], ['nao_atendeu', 'Não era isso']];
-const iniciadoEm = Date.now(), avaliadoDemo = new Set(), jaAvisado = new Set();
+const iniciadoEm = Date.now(), avaliadoDemo = new Set(), jaAvisado = new Set(); let ultimaAssin = '';
 const foiAvaliado = run => avaliadoDemo.has(run) || avalUnicas().some(a => a.run === run);
 function pendentesAval() {
   return derivar(events).agentes.filter(a => a.estado === 'done' && a.id && !foiAvaliado(a.id)).sort((x, y) => y.fim - x.fim);
@@ -190,15 +190,31 @@ async function avaliarRun(a, nota, tags, com) {
   }
   atualizarAval(); return true;
 }
+// "O que ele fez", contado a partir dos registros dos hooks (funciona mesmo sem relatório do agente)
+function atividadeDe(a) {
+  const c = {}; events.filter(e => e.agent === a.id && e.ev === 'PostToolUse').forEach(e => { c[e.tool] = (c[e.tool] || 0) + 1; });
+  const s = (n, um, varios) => n ? `${um.replace('#', n)}`.replace('(s)', n === 1 ? '' : 's').replace('(es)', n === 1 ? '' : 'es') : '';
+  const p = [s(c.Read, 'leu # arquivo(s)'), s((c.Glob || 0) + (c.Grep || 0), 'buscou # vez(es) nos arquivos'.replace('vez(es)', 'vez(es)')), s((c.WebSearch || 0) + (c.WebFetch || 0), 'pesquisou na web # vez(es)'), s(c.Write, 'gravou # arquivo(s)'), s(c.Edit, 'editou # vez(es)'), s(c.Bash, 'rodou # comando(s)')].filter(Boolean);
+  return p.length ? p.join(' · ') : 'sem atividade registrada pelos hooks';
+}
 function cardAval(a, compacto) {
-  const v = visual(a), rel = a.resumo || '(o agente não deixou relatório)', arqs = a.arquivos || [];
+  const v = visual(a), arqs = [...new Set(a.arquivos || [])];
+  const rel = (a.resumo || '').replace(/\*\*/g, '').trim();
   const el = document.createElement('div'); el.className = compacto ? 'toast' : 'cardav'; el.dataset.run = a.id;
   const quem = `<div class="quem">${spriteSVG(v.info, 3)}<span>${esc(v.rotulo)}</span><small class="nota">terminou · ${dur(a.fim - a.inicio)}${v.desc ? ' · ' + esc(v.desc) : ''}</small></div>`;
+  const fez = `<div class="nota fez">🔧 ${esc(atividadeDe(a))}</div>`;
   const botoes = `<div class="bt"><button class="btn-joia">👍 Joia</button><button class="btn-dis">👎 Deslike</button>${compacto ? '<button class="det">detalhes</button>' : ''}</div>`;
+  const semRel = 'O agente não deixou relatório (rodou em segundo plano ou não seguiu o formato). Veja o que ele fez e abra as entregas abaixo para avaliar.';
   el.innerHTML = quem + (compacto
-    ? `<div class="rel">${esc(rel.replace(/\*\*/g, '').slice(0, 240))}</div>`
-    : `<pre class="rel">${esc(rel.replace(/\*\*/g, ''))}</pre>${arqs.length ? `<div class="nota">Entregas: ${arqs.map(esc).join(', ')}</div>` : ''}<div class="chips">${CHIPS.map(c => `<button class="chip" data-t="${c[0]}">${c[1]}</button>`).join('')}</div><textarea class="com" rows="2" placeholder="Comentário (opcional): o que ficou bom ou ruim? Vira lição na memória do agente."></textarea>`) + botoes;
-  el.querySelectorAll('.chip').forEach(c => c.onclick = () => c.classList.toggle('on'));
+    ? `<div class="rel">${esc((rel || semRel).slice(0, 240))}</div>${fez}`
+    : `<pre class="rel">${esc(rel || semRel)}</pre>${fez}${arqs.length ? `<div class="nota">Entregas (clique para ler):</div><div class="chips">${arqs.map(f => `<button class="chip arq" data-p="${esc(f)}">📄 ${esc(f.split('/').pop())}</button>`).join('')}</div><pre class="doc arqdoc" hidden></pre>` : ''}<div class="chips">${CHIPS.map(c => `<button class="chip" data-t="${c[0]}">${c[1]}</button>`).join('')}</div><textarea class="com" rows="2" placeholder="Comentário (opcional): o que ficou bom ou ruim? Vira lição na memória do agente."></textarea>`) + botoes;
+  el.querySelectorAll('.chip:not(.arq)').forEach(c => c.onclick = () => c.classList.toggle('on'));
+  el.querySelectorAll('.arq').forEach(b => b.onclick = async () => {
+    const pre = el.querySelector('.arqdoc'); if (pre.dataset.p === b.dataset.p && !pre.hidden) { pre.hidden = true; return; }
+    pre.hidden = false; pre.dataset.p = b.dataset.p; pre.textContent = 'Abrindo…';
+    const r = await API('/api/arquivo?p=' + encodeURIComponent(b.dataset.p));
+    pre.textContent = r && r.texto != null ? r.texto : '(não foi possível abrir: ' + (r ? r.erro : 'só funciona no servidor local') + ')';
+  });
   const tags = () => [...el.querySelectorAll('.chip.on')].map(c => c.dataset.t), com = () => (el.querySelector('.com') || {}).value || '';
   el.querySelector('.btn-joia').onclick = () => avaliarRun(a, 'up', tags(), com());
   el.querySelector('.btn-dis').onclick = () => avaliarRun(a, 'down', tags(), com());
@@ -213,14 +229,14 @@ function atualizarAval() {
   [...T.children].forEach(t => { if (!ids.has(t.dataset.run)) t.remove(); });
   pend.filter(a => (a.fim >= iniciadoEm - 5000) && !jaAvisado.has(a.id)).forEach(a => { jaAvisado.add(a.id); T.appendChild(cardAval(a, true)); });
   while (T.children.length > 4) T.firstChild.remove();
-  if (!$('aval').hidden) desenharAval();
+  const assin = pend.map(a => a.id).join(','); if (!$('aval').hidden && assin !== ultimaAssin) desenharAval(); ultimaAssin = assin;
 }
 function desenharAval() {
   const pend = pendentesAval(), el = $('aBody'); el.innerHTML = '';
   if (!pend.length) { el.innerHTML = '<div class="vazio2">Nada esperando a sua nota. 🎉</div>'; return; }
   pend.forEach(a => el.appendChild(cardAval(a, false)));
 }
-function abrirAval() { $('aval').hidden = false; desenharAval(); }
+function abrirAval() { $('aval').hidden = false; desenharAval(); ultimaAssin = pendentesAval().map(a => a.id).join(','); }
 
 /* ---------- ligações ---------- */
 function ligarFicha() {

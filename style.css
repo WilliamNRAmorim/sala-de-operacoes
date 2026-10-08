@@ -96,3 +96,5 @@ table.rank tr.bot td{background:color-mix(in srgb,var(--alerta) 18%,transparent)
 .chip.on{border-color:var(--destaque);background:color-mix(in srgb,var(--destaque) 25%,transparent)}
 #btnAval{border-color:var(--destaque)}
 #btnAval b{color:var(--destaque)}
+.cardav .fez,.toast .fez{margin:4px 0}
+pre.arqdoc{max-height:260px}
