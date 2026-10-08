@@ -23,10 +23,13 @@ async function carregarAval() {
 function statsDe(tipo, desde = 0) {
   const t0 = desde || 0;
   const tarefas = events.filter(e => e.ev === 'SubagentStop' && baseOuIgual(e.type, tipo) && new Date(e.t) >= t0).length;
-  const av = AVAL.filter(a => a.agente === tipo && new Date(a.t) >= t0);
+  const av = avalUnicas().filter(a => a.agente === tipo && new Date(a.t) >= t0);
   const ups = av.filter(a => a.nota === 'up').length, downs = av.filter(a => a.nota === 'down').length;
-  return { tarefas, ups, downs, aval: ups + downs, aprov: ups + downs ? Math.round(ups / (ups + downs) * 100) : null };
+  const retrab = av.filter(a => (a.tags || []).includes('retrabalho')).length;
+  return { tarefas, ups, downs, retrab, aval: ups + downs, aprov: ups + downs ? Math.round(ups / (ups + downs) * 100) : null };
 }
+// a nota mais recente de cada tarefa (run) ou, sem run, de cada arquivo
+function avalUnicas() { const m = new Map(); AVAL.forEach(a => m.set(a.run ? 'r:' + a.run : 'f:' + a.agente + '|' + a.arquivo, a)); return [...m.values()]; }
 const baseOuIgual = (a, b) => a === b;
 function xpNivel(tipo) {
   const s = statsDe(tipo);
@@ -43,7 +46,7 @@ function abrirFicha(item) {
   const sessao = item.tipo === 'sessao', tipo = item.tipoKey || '';
   const info = item.info || {};
   $('fAvatar').innerHTML = spriteSVG(info, 5);
-  $('fNome').textContent = sessao ? 'Sessão: ' + item.rotulo : info.nome || tipo;
+  $('fNome').textContent = sessao ? 'Sessão: ' + item.rotulo : (item.rotulo || info.nome || tipo) + (item.desc ? ' — ' + item.desc : '');
   if (sessao) { $('fSub').textContent = 'Conversa principal do Claude Code'; $('fXp').style.width = '0'; $('fNivel').textContent = ''; }
   else {
     const x = xpNivel(tipo);
@@ -144,8 +147,8 @@ async function abrirRevisao() {
     const el2 = lista.filter(l => l.elegivel), k = Math.max(1, Math.floor(el2.length * R.fracao));
     const podeSelecionar = el2.length >= 2;
     const top = podeSelecionar ? el2.slice(0, k) : [], bot = podeSelecionar ? el2.slice(-k).reverse() : [];
-    html += `<h3>Grupo: ${esc(g)}</h3><table class="rank"><tr><th>Agente</th><th>Nível</th><th>Tarefas</th><th>👍</th><th>👎</th><th>Aprovação</th><th></th></tr>` +
-      lista.map(l => `<tr class="${top.includes(l) ? 'top' : bot.includes(l) ? 'bot' : ''}"><td>${esc(l.info.nome)} <small>(${esc(l.nome)})</small></td><td>${l.nivel}</td><td>${l.s.tarefas}</td><td>${l.s.ups}</td><td>${l.s.downs}</td><td>${l.s.aprov == null ? '—' : l.s.aprov + '%'}</td><td>${l.elegivel ? (top.includes(l) ? '⭐ replicar' : bot.includes(l) ? '⚠ aposentar?' : '') : '<span class="nota">poucas notas</span>'}</td></tr>`).join('') + '</table>';
+    html += `<h3>Grupo: ${esc(g)}</h3><table class="rank"><tr><th>Agente</th><th>Nível</th><th>Tarefas</th><th>👍</th><th>👎</th><th>Aprovação</th><th>Retrabalho</th><th></th></tr>` +
+      lista.map(l => `<tr class="${top.includes(l) ? 'top' : bot.includes(l) ? 'bot' : ''}"><td>${esc(l.info.nome)} <small>(${esc(l.nome)})</small></td><td>${l.nivel}</td><td>${l.s.tarefas}</td><td>${l.s.ups}</td><td>${l.s.downs}</td><td>${l.s.aprov == null ? '—' : l.s.aprov + '%'}</td><td>${l.s.retrab}</td><td>${l.elegivel ? (top.includes(l) ? '⭐ replicar' : bot.includes(l) ? '⚠ aposentar?' : '') : '<span class="nota">poucas notas</span>'}</td></tr>`).join('') + '</table>';
     if (!podeSelecionar) html += `<div class="nota">Sem proposta neste grupo: precisa de pelo menos 2 agentes com ${R.minAvaliacoes}+ notas. Para competir, crie um segundo agente do mesmo grupo (ex.: <code>${esc(lista[0].nome)}-v2</code>).</div>`;
     else top.forEach((melhor, i) => {
       const pior = bot[i]; if (!pior || pior === melhor) return;
@@ -169,6 +172,56 @@ async function abrirRevisao() {
   });
 }
 
+/* ---------- avaliação logo que o agente termina ---------- */
+const LOCAL = ['localhost', '127.0.0.1'].includes(location.hostname);
+const CHIPS = [['atendeu', 'Atendeu o que pedi'], ['sem_problemas', 'Sem problemas'], ['retrabalho', 'Teve retrabalho'], ['errou', 'Errou'], ['nao_atendeu', 'Não era isso']];
+const iniciadoEm = Date.now(), avaliadoDemo = new Set(), jaAvisado = new Set();
+const foiAvaliado = run => avaliadoDemo.has(run) || avalUnicas().some(a => a.run === run);
+function pendentesAval() {
+  return derivar(events).agentes.filter(a => a.estado === 'done' && a.id && !foiAvaliado(a.id)).sort((x, y) => y.fim - x.fim);
+}
+async function avaliarRun(a, nota, tags, com) {
+  const agente = a.tipo && /^[a-z0-9][a-z0-9-]*$/.test(a.tipo) ? a.tipo : 'geral';
+  if (demo || !LOCAL) avaliadoDemo.add(a.id);
+  else {
+    const r = await API('/api/avaliar', { agente, run: a.id, arquivo: (a.arquivos || []).slice(-1)[0] || '', nota, tags, comentario: com || '', contexto: String(a.resumo || '').replace(/\*\*/g, '').replace(/\s+/g, ' ').slice(0, 140) });
+    if (!r || !r.ok) { alert('Não consegui salvar a nota (o servidor local está ligado?)'); return false; }
+    await carregarAval();
+  }
+  atualizarAval(); return true;
+}
+function cardAval(a, compacto) {
+  const v = visual(a), rel = a.resumo || '(o agente não deixou relatório)', arqs = a.arquivos || [];
+  const el = document.createElement('div'); el.className = compacto ? 'toast' : 'cardav'; el.dataset.run = a.id;
+  const quem = `<div class="quem">${spriteSVG(v.info, 3)}<span>${esc(v.rotulo)}</span><small class="nota">terminou · ${dur(a.fim - a.inicio)}${v.desc ? ' · ' + esc(v.desc) : ''}</small></div>`;
+  const botoes = `<div class="bt"><button class="btn-joia">👍 Joia</button><button class="btn-dis">👎 Deslike</button>${compacto ? '<button class="det">detalhes</button>' : ''}</div>`;
+  el.innerHTML = quem + (compacto
+    ? `<div class="rel">${esc(rel.replace(/\*\*/g, '').slice(0, 240))}</div>`
+    : `<pre class="rel">${esc(rel.replace(/\*\*/g, ''))}</pre>${arqs.length ? `<div class="nota">Entregas: ${arqs.map(esc).join(', ')}</div>` : ''}<div class="chips">${CHIPS.map(c => `<button class="chip" data-t="${c[0]}">${c[1]}</button>`).join('')}</div><textarea class="com" rows="2" placeholder="Comentário (opcional): o que ficou bom ou ruim? Vira lição na memória do agente."></textarea>`) + botoes;
+  el.querySelectorAll('.chip').forEach(c => c.onclick = () => c.classList.toggle('on'));
+  const tags = () => [...el.querySelectorAll('.chip.on')].map(c => c.dataset.t), com = () => (el.querySelector('.com') || {}).value || '';
+  el.querySelector('.btn-joia').onclick = () => avaliarRun(a, 'up', tags(), com());
+  el.querySelector('.btn-dis').onclick = () => avaliarRun(a, 'down', tags(), com());
+  const d = el.querySelector('.det'); if (d) d.onclick = abrirAval;
+  return el;
+}
+function atualizarAval() {
+  if (!LOCAL && !demo) { $('btnAval').hidden = true; return; }
+  const pend = pendentesAval(), ids = new Set(pend.map(a => a.id));
+  $('btnAval').hidden = !pend.length; $('btnAval').innerHTML = `⭐ avaliar <b>${pend.length}</b>`;
+  const T = $('toasts');
+  [...T.children].forEach(t => { if (!ids.has(t.dataset.run)) t.remove(); });
+  pend.filter(a => (a.fim >= iniciadoEm - 5000) && !jaAvisado.has(a.id)).forEach(a => { jaAvisado.add(a.id); T.appendChild(cardAval(a, true)); });
+  while (T.children.length > 4) T.firstChild.remove();
+  if (!$('aval').hidden) desenharAval();
+}
+function desenharAval() {
+  const pend = pendentesAval(), el = $('aBody'); el.innerHTML = '';
+  if (!pend.length) { el.innerHTML = '<div class="vazio2">Nada esperando a sua nota. 🎉</div>'; return; }
+  pend.forEach(a => el.appendChild(cardAval(a, false)));
+}
+function abrirAval() { $('aval').hidden = false; desenharAval(); }
+
 /* ---------- ligações ---------- */
 function ligarFicha() {
   const cv = $('cena');
@@ -179,7 +232,8 @@ function ligarFicha() {
   document.querySelectorAll('#ficha .tabs button').forEach(b => b.onclick = () => { fAba = b.dataset.t; fDoc = null; document.querySelectorAll('#ficha .tabs button').forEach(x => x.classList.toggle('on', x === b)); desenharAba(); });
   if (!['localhost', '127.0.0.1'].includes(location.hostname)) $('btnRev').hidden = true;   // revisão semanal só no servidor local
   $('btnRev').onclick = abrirRevisao; $('rFechar').onclick = () => $('revisao').hidden = true;
-  carregarAval();
+  $('btnAval').onclick = abrirAval; $('aFechar').onclick = () => $('aval').hidden = true;
+  carregarAval().then(atualizarAval); setInterval(atualizarAval, 2000);
   setInterval(() => { if (fItem && !$('ficha').hidden && fAba === 'atividade') abaAtividade($('fBody')); }, 2000);
 }
 ligarFicha();

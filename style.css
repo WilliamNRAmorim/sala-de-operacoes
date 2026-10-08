@@ -79,3 +79,20 @@ table.rank tr.top td{background:color-mix(in srgb,var(--ok) 18%,transparent)}
 table.rank tr.bot td{background:color-mix(in srgb,var(--alerta) 18%,transparent)}
 .prop{border:2px dashed var(--destaque);padding:10px;margin:8px 0}
 .nota{color:var(--suave);font-size:11px}
+/* avisos de avaliação */
+#toasts{position:fixed;right:12px;bottom:12px;display:flex;flex-direction:column;gap:8px;z-index:30;width:min(340px,calc(100% - 24px))}
+.toast{background:var(--painel);border:3px solid var(--destaque);padding:10px;box-shadow:0 0 18px #0008;animation:sobe .25s}
+@keyframes sobe{from{transform:translateY(12px);opacity:0}}
+.toast .quem{display:flex;gap:8px;align-items:center;font-weight:bold}
+.toast .quem svg{image-rendering:pixelated}
+.toast .rel{font-size:11px;color:var(--suave);margin:6px 0;max-height:70px;overflow:hidden;white-space:pre-wrap}
+.toast .bt,.cardav .bt{display:flex;gap:6px;flex-wrap:wrap}
+.btn-joia{border-color:var(--ok);color:var(--ok)}.btn-dis{border-color:var(--alerta);color:var(--alerta)}
+.cardav{border:2px solid var(--linha);padding:10px;margin:10px 0}
+.cardav .quem{display:flex;gap:8px;align-items:center;font-weight:bold}
+.cardav pre.rel{white-space:pre-wrap;background:#0b0920;border:2px solid var(--linha);padding:8px;max-height:200px;overflow:auto;font:12px "Courier New",monospace;margin:8px 0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chip{font-size:11px;padding:3px 8px;border:2px solid var(--linha);background:transparent;cursor:pointer}
+.chip.on{border-color:var(--destaque);background:color-mix(in srgb,var(--destaque) 25%,transparent)}
+#btnAval{border-color:var(--destaque)}
+#btnAval b{color:var(--destaque)}

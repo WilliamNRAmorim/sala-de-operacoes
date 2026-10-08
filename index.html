@@ -15,6 +15,7 @@
   <div class="hud" id="hud"></div>
   <div class="ctrl">
     <select id="janela" title="Janela de tempo"></select>
+    <button id="btnAval" title="Entregas esperando a sua nota" hidden>⭐ avaliar</button>
     <button id="btnRev" title="Ranking semanal dos agentes">🏆 revisão semanal</button>
     <button id="btnDemo" title="Alternar modo demo">▶ demo</button>
     <button id="btnCfg" title="Personalizar">⚙</button>
@@ -25,6 +26,15 @@
   <canvas id="cena"></canvas>
   <section class="log" id="log"></section>
 </main>
+
+<div id="toasts"></div>
+
+<div class="modal" id="aval" hidden>
+  <div class="mcard">
+    <div class="dhead"><b>⭐ Para avaliar</b><button id="aFechar">✕</button></div>
+    <div id="aBody"></div>
+  </div>
+</div>
 
 <aside class="ficha" id="ficha" hidden>
   <div class="fhead">

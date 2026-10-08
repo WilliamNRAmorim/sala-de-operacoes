@@ -11,6 +11,7 @@
   "maxMesas": 8,
   "maxNoSofa": 12,
   "mostrarLog": true,
+  "agentesUnicos": ["bit", "insta", "din", "tit"],
   "revisao": { "fracao": 0.25, "minAvaliacoes": 3, "dias": 7, "_ajuda": "fracao = % melhores/piores por grupo; minAvaliacoes = notas suas mínimas para entrar no ranking; dias = janela" },
 
   "fonteLocal": { "tipo": "arquivo", "url": "data/events.json", "_ajuda": "usada quando a página abre em localhost: lê o arquivo local, com todos os detalhes" },
@@ -131,7 +132,8 @@
 
   "projetos": {
     "_ajuda": "Pasta -> nome que aparece na sala. Só o nome da última pasta é usado.",
-    "Projetos": "Escritório de TI"
+    "Projetos": "Escritório de TI",
+    "Sala_Agentes": "Sala de Operações"
   },
 
   "paleta": {

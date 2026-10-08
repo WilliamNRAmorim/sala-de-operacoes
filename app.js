@@ -70,8 +70,9 @@ function spriteSVG(info, escala = 4) {
 /* ---------- estado a partir dos eventos ---------- */
 function derivar(evs) {
   const now = Date.now(), janela = (CFG.janelaHoras || 12) * 3600e3;
-  const sess = {}, ag = {};
+  const sess = {}, ag = {}, pend = [];   // pend: descrições de agentes recém-criados, à espera do SubagentStart
   const nomeProj = p => ((CFG.projetos || {})[p]) || p || '';
+  const pegaNome = (tipo, t) => { const i = pend.findIndex(p => p.tipo === tipo && p.t <= t + 2000); return i >= 0 ? pend.splice(i, 1)[0].desc : ''; };
   const sorted = [...evs].sort((a, b) => new Date(a.t) - new Date(b.t));
   for (const e of sorted) {
     const t = new Date(e.t).getTime();
@@ -83,14 +84,29 @@ function derivar(evs) {
       case 'UserPromptSubmit': s.estado = 'work'; break;
       case 'Stop': s.estado = 'idle'; break;
       case 'SessionEnd': s.estado = 'fim'; s.fim = t; break;
-      case 'SubagentStart': ag[e.agent || sid + t] = { id: e.agent, tipo: e.type, sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: null }; break;
-      case 'SubagentStop': { const a = ag[e.agent]; if (a) a.fim = t; else ag[e.agent] = { id: e.agent, tipo: e.type, sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: t }; } break;
+      case 'PreToolUse': if (e.tool === 'Agent' || e.tool === 'Task') pend.push({ t, tipo: e.type, desc: e.alvo || '' }); break;
+      case 'SubagentStart': ag[e.agent || sid + t] = { id: e.agent, tipo: e.type, nome: pegaNome(e.type, t), sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: null }; break;
+      case 'PostToolUse': { const a = ag[e.agent]; if (a && (e.tool === 'Write' || e.tool === 'Edit') && e.arquivo) (a.arquivos = a.arquivos || []).push(e.arquivo); } break;
+      case 'SubagentStop': { const a = ag[e.agent]; if (a) { a.fim = t; a.resumo = e.resumo || ''; } else ag[e.agent] = { id: e.agent, tipo: e.type, sessao: sid, projeto: nomeProj(e.project), inicio: t, fim: t }; } break;
     }
   }
   const stale = (CFG.minutosParaSumido || 30) * 60e3;
   const agentes = Object.values(ag).map(a => ({ ...a, estado: a.fim ? 'done' : (now - a.inicio > stale ? 'sumido' : 'work') }));
   const sessoes = Object.values(sess).filter(s => s.estado !== 'fim' && now - s.ult < janela);
   return { agentes, sessoes };
+}
+
+// Aparência e nome de um agente. Nome vem da descrição dada ao criá-lo ("Bit: roteiro" -> Bit; "Haiku 07" -> Haiku 07).
+// Se a descrição começa com um tipo conhecido (bit, insta, din, tit...), usa a aparência desse tipo.
+function visual(a) {
+  const T = CFG.tipos || {}, desc = String(a.nome || '').trim();
+  const primeira = desc.split(/[:\s]/)[0].toLowerCase();
+  let chave = a.tipo;
+  if ((!T[chave] || chave === 'general-purpose' || !chave) && T[primeira] && !primeira.startsWith('_')) chave = primeira;
+  const info = tipoInfo(chave);
+  let rotulo = info.nome;
+  if (desc && (chave === 'general-purpose' || !chave || !T[a.tipo])) rotulo = T[primeira] ? info.nome : desc.replace(/\s*[:\-–].*$/, '').slice(0, 16) || info.nome;
+  return { info, rotulo, desc };
 }
 
 /* ---------- desenho ---------- */
@@ -112,9 +128,12 @@ function render() {
 
   // cena: um personagem por agente / sessão
   const lista = [];
+  // agentes únicos (config.agentesUnicos) aparecem UMA vez: só a execução mais recente (a que está trabalhando, se houver)
+  const unicos = new Set(CFG.agentesUnicos || []), jaTem = new Set(), manter = new Set();
+  [...ativos, ...feitos].sort((a, b) => b.inicio - a.inicio).forEach(a => { if (unicos.has(a.tipo)) { if (jaTem.has(a.tipo)) return; jaTem.add(a.tipo); } manter.add(a); });
   sessoes.forEach(s => lista.push({ id: 's:' + s.id, tipo: 'sessao', sessId: s.id, estado: s.estado, info: { cor: '#ffffff', cabelo: '#222222', balao: '💬' }, rotulo: s.projeto || 'sessão', sub: s.estado === 'work' ? (T.trabalhando || 'trabalhando') : 'aguardando' }));
-  ativos.forEach(a => { const i = tipoInfo(a.tipo); lista.push({ id: 'a:' + (a.id || a.inicio), tipo: 'agente', tipoKey: a.tipo, run: a.id, estado: a.estado, info: i, rotulo: i.nome, sub: (a.estado === 'sumido' ? (T.sumiu || 'sumiu?') + ' ' : '') + dur(now - a.inicio) }); });
-  feitos.slice(0, CFG.maxNoSofa || 12).forEach(a => { const i = tipoInfo(a.tipo); lista.push({ id: 'a:' + (a.id || a.inicio), tipo: 'agente', tipoKey: a.tipo, run: a.id, estado: 'done', info: i, rotulo: i.nome, sub: dur(a.fim - a.inicio) }); });
+  ativos.filter(a => manter.has(a)).forEach(a => { const v = visual(a); lista.push({ id: 'a:' + (a.id || a.inicio), tipo: 'agente', tipoKey: a.tipo, run: a.id, desc: v.desc, estado: a.estado, info: v.info, rotulo: v.rotulo, sub: (a.estado === 'sumido' ? (T.sumiu || 'sumiu?') + ' ' : '') + dur(now - a.inicio) }); });
+  feitos.filter(a => manter.has(a)).slice(0, CFG.maxNoSofa || 12).forEach(a => { const v = visual(a); lista.push({ id: 'a:' + (a.id || a.inicio), tipo: 'agente', tipoKey: a.tipo, run: a.id, desc: v.desc, estado: 'done', info: v.info, rotulo: v.rotulo, sub: dur(a.fim - a.inicio) }); });
   Cena.sync(lista);
 
   // log de mudanças
@@ -159,6 +178,7 @@ function startStream() {
 }
 
 /* ---------- demo ---------- */
+const DEMO_REL = '**O que fiz:** roteiro-base de 10 falas com a lição final.\n**Entregas:** Conteudo_Bit/Semanal/teste_bit/roteiro_base.md\n**Erros ou retrabalho:** nenhum.\n**Atendi ao que foi pedido?** sim.\n**Falta aprovar:** o tema.';
 const DEMO_TIPOS = ['bit', 'insta', 'din', 'tit', 'explorador'];
 function demoStart() {
   Cena.reset();
@@ -172,7 +192,7 @@ function demoStart() {
     const id = 'd' + (n++), tipo = DEMO_TIPOS[i % 5], s = now - (35 - i * 5) * 60e3;
     add('SubagentStart', { agent: id, type: tipo, t: s }); trabalho(id, tipo, s);
     add('PostToolUse', { agent: id, type: tipo, tool: 'Write', alvo: 'roteiro_base.md', arquivo: 'Conteudo_Bit/Semanal/teste_bit/roteiro_base.md', t: s + 60e3 });
-    add('SubagentStop', { agent: id, type: tipo, t: s + (2 + i) * 60e3, resumo: 'Entreguei o roteiro-base com 10 falas e a lição final.' });
+    add('SubagentStop', { agent: id, type: tipo, t: s + (2 + i) * 60e3, resumo: DEMO_REL });
   }
   for (let i = 0; i < 3; i++) { const id = 'd' + (n++), tipo = DEMO_TIPOS[i], s = now - (i + 1) * 20e3; add('SubagentStart', { agent: id, type: tipo, t: s }); trabalho(id, tipo, s); }
   render();
@@ -181,7 +201,7 @@ function demoStart() {
     if (abertos.length && (Math.random() < .5 || abertos.length > 5)) {
       const a = abertos[Math.floor(Math.random() * abertos.length)];
       add('PostToolUse', { agent: a.agent, type: a.type, tool: 'Write', alvo: 'roteiro_base.md', arquivo: 'Conteudo_Bit/Semanal/teste_bit/roteiro_base.md' });
-      add('SubagentStop', { agent: a.agent, type: a.type, resumo: 'Entreguei o roteiro-base com 10 falas e a lição final.' });
+      add('SubagentStop', { agent: a.agent, type: a.type, resumo: DEMO_REL });
     } else { const id = 'd' + (n++), tipo = DEMO_TIPOS[Math.floor(Math.random() * 5)]; add('SubagentStart', { agent: id, type: tipo }); trabalho(id, tipo, Date.now()); }
     render();
   }, 2500);
